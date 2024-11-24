@@ -43,4 +43,8 @@ function createAddQuoteForm() {
   alert("New quote added successfully!");
 }
 
+const button = document.getElementById("newQuote");
+button.addEventListener('click' e=>{
+  console.log(e);
+})
 
