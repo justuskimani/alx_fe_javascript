@@ -95,6 +95,8 @@ async function syncQuotes() {
       }
     }
 
+    // Notify user of successful sync
+    alert("Quotes synced with server!");
     notifyUser("Quotes successfully synced with the server!");
   } catch (error) {
     console.error("Error syncing quotes:", error);
@@ -202,6 +204,4 @@ document.addEventListener("DOMContentLoaded", () => {
   document.getElementById("newQuote").addEventListener("click", showRandomQuote);
   setInterval(syncQuotes, 30000); // Sync with the server every 30 seconds
 });
-	
-
 	
