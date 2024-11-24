@@ -1,9 +1,27 @@
+Justus Kimani
+	
+7:56 PM (6 minutes ago)
+	
+to me
 // Array to store quotes
-const quotes = [
+let quotes = JSON.parse(localStorage.getItem("quotes")) || [
   { text: "The only limit to our realization of tomorrow is our doubts of today.", category: "Motivation" },
   { text: "Success is not final, failure is not fatal: It is the courage to continue that counts.", category: "Inspiration" },
   { text: "Believe you can and you're halfway there.", category: "Belief" },
 ];
+
+// Save quotes to local storage
+function saveQuotes() {
+  localStorage.setItem("quotes", JSON.stringify(quotes));
+}
+
+// Load last viewed quote using session storage
+function loadLastViewedQuote() {
+  const lastViewedQuote = sessionStorage.getItem("lastViewedQuote");
+  if (lastViewedQuote) {
+    displayQuotes([JSON.parse(lastViewedQuote)]);
+  }
+}
 
 // Function to display quotes
 function displayQuotes(filteredQuotes) {
@@ -23,6 +41,9 @@ function displayQuotes(filteredQuotes) {
     // Append the quote elements to the display div
     quoteDisplay.appendChild(quoteTextElem);
     quoteDisplay.appendChild(quoteCategoryElem);
+
+    // Save the last viewed quote to session storage
+    sessionStorage.setItem("lastViewedQuote", JSON.stringify(quote));
   });
 }
 
@@ -46,6 +67,9 @@ function addQuote() {
   // Add the new quote to the quotes array
   quotes.push({ text: newQuoteText, category: newQuoteCategory });
 
+  // Save quotes to local storage
+  saveQuotes();
+
   // Clear the input fields
   document.getElementById("newQuoteText").value = "";
   document.getElementById("newQuoteCategory").value = "";
@@ -53,9 +77,8 @@ function addQuote() {
   // Notify the user
   alert("New quote added successfully!");
 
-  // Update the category filter and store the new category in localStorage
+  // Update the category filter
   populateCategories();
-  localStorage.setItem("lastSelectedCategory", document.getElementById("categoryFilter").value);
 
   // Re-filter quotes after adding a new one
   filterQuotes();
@@ -82,21 +105,47 @@ function populateCategories() {
 function filterQuotes() {
   const selectedCategory = document.getElementById("categoryFilter").value;
 
-  // If 'All Categories' is selected, show all quotes
   if (selectedCategory === "all") {
     displayQuotes(quotes);
   } else {
-    // Filter quotes based on selected category
     const filteredQuotes = quotes.filter(quote => quote.category === selectedCategory);
     displayQuotes(filteredQuotes);
   }
 }
 
-// Function to restore the last selected category from localStorage
+// Function to restore the last selected category from local storage
 function restoreLastSelectedCategory() {
   const lastSelectedCategory = localStorage.getItem("lastSelectedCategory") || "all";
   document.getElementById("categoryFilter").value = lastSelectedCategory;
-  filterQuotes(); // Display quotes based on the last selected category
+  filterQuotes();
+}
+
+// Function to export quotes to a JSON file
+function exportToJsonFile() {
+  const jsonData = JSON.stringify(quotes, null, 2);
+  const blob = new Blob([jsonData], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+
+  const downloadLink = document.createElement("a");
+  downloadLink.href = url;
+  downloadLink.download = "quotes.json";
+  downloadLink.click();
+
+  URL.revokeObjectURL(url);
+}
+
+// Function to import quotes from a JSON file
+function importFromJsonFile(event) {
+  const fileReader = new FileReader();
+  fileReader.onload = function (event) {
+    const importedQuotes = JSON.parse(event.target.result);
+    quotes.push(...importedQuotes);
+    saveQuotes();
+    alert("Quotes imported successfully!");
+    populateCategories();
+    filterQuotes();
+  };
+  fileReader.readAsText(event.target.files[0]);
 }
 
 // Function to create and add the form for adding new quotes
@@ -122,10 +171,27 @@ function createAddQuoteForm() {
   formContainer.appendChild(addButton);
 
   document.body.appendChild(formContainer);
+
+  // Add export button
+  const exportButton = document.createElement("button");
+  exportButton.textContent = "Export Quotes to JSON";
+  exportButton.addEventListener("click", exportToJsonFile);
+  formContainer.appendChild(exportButton);
+
+  // Add import file input
+  const importFileInput = document.createElement("input");
+  importFileInput.type = "file";
+  importFileInput.id = "importFile";
+  importFileInput.accept = ".json";
+  importFileInput.addEventListener("change", importFromJsonFile);
+  formContainer.appendChild(importFileInput);
 }
 
 // Initialize the application
 document.addEventListener("DOMContentLoaded", () => {
+  // Load the last viewed quote
+  loadLastViewedQuote();
+
   // Display the initial list of all quotes
   displayQuotes(quotes);
 
@@ -135,7 +201,7 @@ document.addEventListener("DOMContentLoaded", () => {
   // Dynamically populate the category filter
   populateCategories();
 
-  // Restore the last selected category filter from localStorage
+  // Restore the last selected category filter from local storage
   restoreLastSelectedCategory();
 
   // Create the form for adding new quotes
